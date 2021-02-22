@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  web-app:
+    build: .
+    deploy:
+      replicas: 2
+  load-balancer:
+    build: load-balancer
+    ports:
+      - 8080:8080
