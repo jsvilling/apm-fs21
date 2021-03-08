@@ -3,12 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script type="text/javascript" src="script.js"></script>
     <title>APM App</title>
 </head>
-<body>
+<body onload="init()">
     <main class="container mt-3">
         <h1>APM App</h1>
         <p>It works! I'm <em th:text="${hostname}">hostname</em>.</p>
+        <h2>Awesome Key–Value Store</h2>
+        <p>
+            <label for="key" class="form-label">Key:</label>
+            <input id="key" type="text" class="form-control">
+        </p>
+        <p>
+            <label for="value" class="form-label">Value:</label><br>
+            <textarea id="value" rows="6" cols="60" onchange="onEdit()" onkeyup="onEdit()" class="form-control"></textarea>
+        </p>
+        <p>
+            <button onclick="load()" class="btn btn-primary">Load</button>
+            <button onclick="store()" class="btn btn-primary">Store</button>
+        </p>
+        <p id="error" class="alert alert-danger" style="visibility: hidden;"></p>
     </main>
 </body>
 </html>

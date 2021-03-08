@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class LocalStorage implements Storage {
 
-    private static Map<Integer, String> storage = new ConcurrentHashMap<>();
+    private final Map<Integer, String> storage = new ConcurrentHashMap<>();
 
     @Override
     public boolean store(int key, String value) {

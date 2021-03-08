@@ -1,0 +1,11 @@
+.conflict, .conflict:focus {
+    background-color: #ecc;
+}
+
+.editing, .editing:focus {
+    background-color: #ffb;
+}
+
+.clean, .clean:focus {
+    background-color: #cec;
+}

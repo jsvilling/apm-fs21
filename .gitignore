@@ -25,7 +25,6 @@ hs_err_pid*
 # Maven
 target/
 
-# Michael's stuff
-apm-fs21.iml
-
+# IntelliJ
+*.iml
 .idea

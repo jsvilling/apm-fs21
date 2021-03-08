@@ -32,9 +32,9 @@ VRRP auf Linux implementiert.
 
 ### 1. keepalived zum Loadbalancer-Image hinzufügen
 
-Als erstes erweitern Sie das Loadbalancer-Image, welches Sie in der letzten 
+Als Erstes erweitern Sie das Loadbalancer-Image, welches Sie in der letzten 
 Übung erstellt haben, und installieren keepalived darin. Das NGINX-Image 
-basiert auf Debian, d.h. Packete können mit
+basiert auf Debian, d. h. Pakete können mit
 [`apt`](https://de.wikipedia.org/wiki/Advanced_Packaging_Tool) installiert
 werden.
 
@@ -56,10 +56,10 @@ dass keepalived installiert wurde:
 
     keepalived -nl
 
-Die Optien `n` und `l` sind dazu da, dass die Ausgabe von keepalived auf der 
+Die Optionen `n` und `l` sind dazu da, dass die Ausgabe von keepalived auf der 
 Kommandozeile ausgegeben werden und nicht im System-Log landen. Es sollte 
 eine Fehlermeldung angezeigt werden, dass die Konfigurationsdatei fehlt. Diese 
-erstellen Sie als nächstes.
+erstellen Sie als Nächstes.
 
 
 ### 2. keepalived konfigurieren
@@ -81,7 +81,7 @@ Fügen Sie folgenden Inhalt ein:
 Damit definieren Sie, dass diese Maschine der 'Master' ist und in einem 
 'Virtual Router'-Verbund mit der ID 101, welche die IP 172.19.1.1 verwendet, 
 teilnimmt. Die `priority` wird zusätzlich verwendet, um zu entscheiden, 
-welche Maschine jeweils zum Master wird (z.B. wenn es mehrere Backups gibt), 
+welche Maschine jeweils zum Master wird (z. B. wenn es mehrere Backups gibt), 
 und `advert_int` gibt an, wie oft der Master Heartbeat-Pakete 
 (_advertisements_) verschickt. Dies ist mal nur die Konfiguration für den 
 Master; der Backup-Loadbalancer braucht später seine eigene.
@@ -93,35 +93,47 @@ Sie das Dockerfile nochmals um folgende Zeilen:
     COPY keepalived-master.conf /etc/keepalived/keepalived.conf
     RUN chmod -x /etc/keepalived/keepalived.conf
 
-Als letztes müssen wir dem Docker-Container noch zusätzliche Rechte geben, 
-welche von VRRP vorausgesetzt werden. Dafür ändern Sie die 'docker-compose.
-yml'-Datei ab und fügen beim 'load-balancer'-Service folgende Zeilen hinzu:
+Als letztes müssen Sie noch zwei Änderungen im 'docker-compose.yml'-File 
+vornehmen. Erstens brauchen die Loadbalancer-Container zusätzliche Rechte,
+welche von VRRP vorausgesetzt werden. Dafür fügen beim 'load-balancer'-Service
+folgende Zeilen hinzu:
 
     cap_add:
       - NET_ADMIN
 
-Die Zeile `cap_add` muss gleich tief eingerückt sein wie `ports`.
+Die Zeile `cap_add` muss gleich tief eingerückt sein wie `ports`. Zusätzlich 
+muss das Docker-interne Netzwerk konfiguriert werden (Docker Compose 
+konfiguriert das Netzwerk sonst unter Umständen mit einer Subnetzmaske, 
+welche nicht mit der virtuellen IP kompatibel ist). Fügen Sie am Ende der 
+Datei folgende Zeilen hinzu:
+
+    networks:
+      default:
+        ipam:
+          config:
+            - subnet: 172.19.0.0/16
+              gateway: 172.19.0.1
 
 Starten Sie (via Docker Compose) nochmals die Container und führen Sie im 
 Loadbalancer-Container `keepalived -nl &` aus. (Das `&` führt dazu, dass das 
 Programm im Hintergrund ausgeführt wird und Sie weitere Befehle ausführen 
 können, ohne keepalived zu beenden.) Jetzt sollte der Dienst funktionieren und
 am Schluss 'Entering MASTER STATE' ausgeben. Mit dem Befehl `ip add show` 
-können Sie (innerhalb des Containers) überprüfen, dass die virtuelle IP `172.19.
-1.1` aufgesetzt wurde. Leider können Sie von ausserhalb von Docker 
+können Sie (innerhalb des Containers) überprüfen, dass die virtuelle IP 
+172.19.1.1 aufgesetzt wurde. Leider können Sie von ausserhalb von Docker 
 normalerweise nicht auf diese zugreifen (dazu später noch mehr).
 
 
 ### 3. Einen Backup-Loadbalancer hinzufügen
 
-keepalived und das VRRP macht nur Sinn, wenn man mindestens eine 
-Backup-Maschine hat. Als nächstes werden Sie dem Setup deshalb einen zweiten 
+keepalived und das VRRP ergeben nur Sinn, wenn man mindestens eine 
+Backup-Maschine hat. Als Nächstes werden Sie dem Setup deshalb einen zweiten 
 Loadbalancer-Container hinzufügen.
 
-Da die beiden Loadbalancer-Images sehr ähnlich sein werden, macht es Sinn, 
+Da die beiden Loadbalancer-Images sehr ähnlich sein werden, ergibt es Sinn, 
 die gemeinsamen Aspekte an einem einzigen Ort zu definieren. Docker stellt 
 dafür einen Mechanismus zur Verfügung, der es erlaubt, Dockerfiles zu 
-_parametrisieren_. Damit können Sie dasselber Dockerfile für den Master- und 
+_parametrisieren_. Damit können Sie dasselbe Dockerfile für den Master- und 
 den Backup-Loadbalancer verwenden.
 
 Fügen Sie im Dockerfile vor dem `COPY`-Befehl für die 
@@ -143,11 +155,13 @@ Priorität kann irgendeinen Wert haben, solange er kleiner als der des
 Masters ist.
 
 Damit Sie wirklich zwei Loadbalancer-Container haben, ändern Sie noch die 
-'docker-compose.yml'-Datei ab, so dass Sie zwei Loadbalancer-Services 
-(Container) haben. Beachten Sie, dass nicht beide das gleiche Port-Mapping 
-verwenden können (dazu später mehr). Ausserdem müssen Sie jetzt noch das 
-`role`-Argument für das Dockerfile definieren. Ersetzen Sie die 
-`build`-Zeile des Masters durch diese Zeilen:
+'docker-compose.yml'-Datei ab und fügen einen zweiten Loadbalancer-Service 
+hinzu. Da hier zwei verschiedene Images verwendet werden, können Sie nicht 
+einfach `replicas: 2` verwenden, sondern müssen die ganze Service-Definition 
+duplizieren (und zwei verschiedene Namen definieren). Beachten Sie, dass nicht 
+beide Loadbalancer das gleiche Port-Mapping verwenden können (dazu später 
+mehr). Ausserdem müssen Sie noch das `role`-Argument für das Dockerfile
+definieren. Ersetzen Sie die `build`-Zeile des Masters durch diese Zeilen:
 
     build:
       context: load-balancer
@@ -173,9 +187,9 @@ diesem Grund ändern Sie den Start-Befehl der Loadbalancer-Images so, dass
 sowohl NGINX als auch keepalived gestartet werden.
 
 Erstellen Sie eine neue Datei 'start.sh' im 'load-balancer'-Ordner und fügen 
-Sie folgenden Inhalt ein. Achten Sie darauf, dass Sie diese Datei die Unix-Zeilentrennzeichen (LF statt
-auf Windows CRLF) gebrauchen. In IntelliJ können Sie dies z.B. in der
-Fusszeile rechts machen.
+Sie folgenden Inhalt ein. Achten Sie darauf, dass Sie in dieser Datei die
+Unix-Zeilentrennzeichen (LF statt auf Windows CRLF) gebrauchen. In IntelliJ 
+können Sie dies z. B. in der Fusszeile unten rechts machen.
 
     #!/bin/bash
     rm -fr /var/run/keepalived.pid
@@ -224,6 +238,6 @@ Einstiegs-NGINX ein Port-Mapping haben, alle anderen Server werden durch
 diesen Reverse-Proxy (und durch die Loadbalancer) erreicht.
 
 Wenn Sie alles richtig gemacht haben, sollten Sie vom Host aus auf die URL 
-localhost:8080 zugreifen können und auf einem der beiden Web-Servern landen. 
-Sie sollten nun einen der Web-Server __und__ einen der Loadbalancer stoppen 
-können, ohne dass die Web-App unerreichbar wird.
+[localhost:8080](http://localhost:8080) zugreifen können und auf einem der 
+beiden Web-Servern landen. Sie sollten nun einen der Web-Server __und__ 
+einen der Loadbalancer stoppen können, ohne dass die Web-App unerreichbar wird.
