@@ -8,7 +8,8 @@
 
 Nachdem es in den ersten zwei Übungen vor allem um Infrastruktur-Aspekte 
 (Clustering, High Availability) ging, geht es in dieser Übung einerseits um 
-Applikations-Aspekte und andererseits um das Durchführen Performance-Messungen.
+Applikations-Aspekte und andererseits um das Durchführen von 
+Performance-Messungen.
 
 Sie arbeiten mit dem Setup aus den ersten beiden Übungen weiter. Die Web-App 
 wurde allerdings für diese Übung erweitert und enthält jetzt einen (ganz 

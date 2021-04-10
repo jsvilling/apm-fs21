@@ -47,12 +47,12 @@ Benutzer 'spring' ohne Root-Rechte ausgeführt. Erstellen Sie das Image, indem
 Sie folgenden Befehl auf der Kommandozeile aufrufen (dafür muss Docker im
 Hintergrund laufen):
 
-    docker build -t fhnw/apm-app .
+    docker build -t apm-app .
 
-Die Option `-t fhnw/apm-app` gibt dem Image einen sinnvollen Namen. Jetzt können
+Die Option `-t apm-app` gibt dem Image einen sinnvollen Namen. Jetzt können
 Sie die App in einem Container starten:
 
-    docker run -it -p 8080:8080 fhnw/apm-app
+    docker run -it -p 8080:8080 apm-app
 
 Die Optionen `-it` sorgen dafür, dass die Kommandozeile mit dem Container
 verknüpft wird und `-p 8080:8080` veröffentlicht den Containerport 8080 mit dem
